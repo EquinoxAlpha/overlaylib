@@ -43,9 +43,9 @@ impl Rectangle {
         }
     }
 
-    pub fn border(self, border: impl TryInto<Outline>) -> Self {
+    pub fn border(self, border: impl Into<Option<Outline>>) -> Self {
         Self {
-            border: border.try_into().ok(),
+            border: border.into(),
             ..self
         }
     }

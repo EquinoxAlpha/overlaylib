@@ -45,6 +45,9 @@ pub struct Overlay {
     texture_program: glium::Program,
     shape_program: glium::Program,
 
+    texture_vbo: glium::VertexBuffer<Vertex>,
+    shape_vbo: glium::VertexBuffer<Vertex>,
+
     pub fonts: Vec<Font>,
     pub current_font: usize,
 }
@@ -136,6 +139,8 @@ impl Overlay {
         Self {
             texture_program,
             shape_program,
+            texture_vbo: glium::VertexBuffer::dynamic(facade, &[]).unwrap(),
+            shape_vbo: glium::VertexBuffer::dynamic(facade, &[]).unwrap(),
             fonts: vec![font],
             current_font: 0,
         }
@@ -171,7 +176,8 @@ impl Overlay {
     where
         F: ?Sized + Facade,
     {
-        let vertex_buffer = glium::VertexBuffer::new(facade, &draw_data[1]).unwrap();
+        let vertex_buffer = &self.texture_vbo; //glium::VertexBuffer::new(facade, &draw_data[1]).unwrap();
+        vertex_buffer.write(draw_data[1]);
         let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
         let (width, height) = target.get_dimensions();
@@ -188,7 +194,7 @@ impl Overlay {
             .wrap_function(glium::uniforms::SamplerWrapFunction::Repeat);
 
         target.draw(
-            &vertex_buffer,
+            vertex_buffer,
             &indices,
             &self.texture_program,
             &uniform! {
@@ -204,10 +210,12 @@ impl Overlay {
         
         vertex_buffer.invalidate();
 
-        let vertex_buffer = glium::VertexBuffer::new(facade, &draw_data[0]).unwrap();
+        // Probably a bad idea to keep recreating them
+        let vertex_buffer = &self.shape_vbo; //glium::VertexBuffer::new(facade, &draw_data[0]).unwrap();
+        vertex_buffer.write(draw_data[0]);
 
         target.draw(
-            &vertex_buffer,
+            vertex_buffer,
             &indices,
             &self.shape_program,
             &uniform! { projection: projection.data },
@@ -222,6 +230,11 @@ impl Overlay {
         Ok(())
     }
 }
+
+
+
+
+
 
 fn _main() {
     let event_loop = EventLoop::new();
@@ -241,6 +254,20 @@ fn _main() {
     let overlay = Overlay::initialize(&display);
 
     let time = std::time::Instant::now();
+
+    /* 
+    Add this code into your window init function to make the overlay clickthrough.
+    unsafe {
+        let gl_window = display.gl_window();
+        let window = gl_window.window();
+        let mut rectangles: Vec<x11::xlib::XRectangle> = Vec::with_capacity(0);
+        let display = window.xlib_display().unwrap() as *mut x11::xlib::_XDisplay;
+        let window = window.xlib_window().unwrap();
+        let region = x11::xfixes::XFixesCreateRegion(display, rectangles.as_mut_ptr(), 0);
+        x11::xfixes::XFixesSetWindowShapeRegion(display, window, 2, 0, 0, region);
+        x11::xfixes::XFixesDestroyRegion(display, region);
+    }
+    */
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
