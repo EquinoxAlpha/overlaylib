@@ -29,7 +29,7 @@ impl Default for Circle {
 
 impl Primitive for Circle {
     fn get_type(&self) -> PrimitiveType {
-        PrimitiveType::Line
+        PrimitiveType::Circle
     }
 
     fn get_vertices(&self) -> Vec<Vertex> {

@@ -19,7 +19,7 @@ pub mod math;
 pub mod primitives;
 pub mod texture;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub struct Vertex {
     pub position: [f32; 2],
     pub tex_coords: [f32; 2],
@@ -218,7 +218,7 @@ impl Overlay {
             &self.shape_program,
             &uniform! { projection: projection.data },
             &DrawParameters {
-                multisampling: false,
+                multisampling: true,
                 ..Default::default()
             },
         )?;

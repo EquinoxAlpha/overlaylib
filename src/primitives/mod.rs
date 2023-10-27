@@ -2,11 +2,13 @@ pub mod rectangle;
 pub mod text;
 pub mod line;
 pub mod circle;
+pub mod triangle;
 
 pub use text::Text;
 pub use line::Line;
 pub use rectangle::Rectangle;
 pub use circle::Circle;
+pub use triangle::Triangle;
 
 use crate::Vertex;
 
@@ -16,6 +18,8 @@ pub const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 pub enum PrimitiveType {
     Rectangle,
     Text,
+    Circle,
+    Triangle,
     Line,
 }
 

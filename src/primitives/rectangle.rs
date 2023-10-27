@@ -22,6 +22,10 @@ impl Default for Rectangle {
 }
 
 impl Rectangle {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     pub fn color(self, color: impl Into<[f32; 4]>) -> Self {
         Self {
             color: color.into(),
@@ -74,10 +78,23 @@ impl Primitive for Rectangle {
                 tex_coords: [1.0, 1.0],
             },
             Vertex {
+                position: [self.position[0], self.position[1]],
+                color: self.color,
+                tex_coords: [0.0, 0.0],
+            },
+            Vertex {
                 position: [self.position[0], self.position[1] + self.dimensions[1]],
                 color: self.color,
                 tex_coords: [0.0, 1.0],
             },
+            Vertex {
+                position: [
+                    self.position[0] + self.dimensions[0],
+                    self.position[1] + self.dimensions[1],
+                ],
+                color: self.color,
+                tex_coords: [1.0, 1.0],
+            }
         ]
     }
 

@@ -4,6 +4,6 @@ Tested only on KDE Plasma.
 
 Proper documentation will probably be added later as development goes on.
 
-Currently, it can draw basic shapes (rectangles, circles, lines) and text. Textures will maybe be added later and multiple fonts are currently unsupported.
+Currently, it can draw basic shapes (rectangles, circles, lines, triangles) and text. Textures will maybe be added later and multiple fonts are currently unsupported.
 
 The code is basically unreadable and there are many improvements that could be made here.
