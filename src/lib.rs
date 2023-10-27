@@ -133,7 +133,7 @@ impl Overlay {
         let font = Font::new(
             facade,
             include_bytes!("../assets/fonts/NotoSansMono-Regular.ttf"),
-            128,
+            24.0,
         );
 
         Self {
@@ -146,7 +146,7 @@ impl Overlay {
         }
     }
 
-    pub fn add_font_from_file<F>(&mut self, facade: &F, path: &str, size: u32)
+    pub fn add_font_from_file<F>(&mut self, facade: &F, path: &str, size: f32)
     where
         F: ?Sized + Facade,
     {
@@ -155,7 +155,7 @@ impl Overlay {
         self.fonts.push(font);
     }
 
-    pub fn add_font_from_memory<F>(&mut self, facade: &F, data: &[u8], size: u32)
+    pub fn add_font_from_memory<F>(&mut self, facade: &F, data: &[u8], size: f32)
     where
         F: ?Sized + Facade,
     {
@@ -218,6 +218,7 @@ impl Overlay {
             &self.shape_program,
             &uniform! { projection: projection.data },
             &DrawParameters {
+                blend: glium::Blend::alpha_blending(),
                 multisampling: true,
                 ..Default::default()
             },
@@ -250,8 +251,6 @@ fn _main() {
     let display = Display::new(window, context, &event_loop).unwrap();
 
     let overlay = Overlay::initialize(&display);
-
-    let time = std::time::Instant::now();
 
     /*
     Add this code into your window init function to make the overlay clickthrough.

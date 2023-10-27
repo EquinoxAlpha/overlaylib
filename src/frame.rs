@@ -4,8 +4,8 @@ use crate::{
 };
 
 pub struct Frame<'a> {
-    shape_buffer: Vec<Vertex>, // Used by the shape builder functions
-    text_buffer: Vec<Vertex>,  // Used by the add_text function
+    shape_buffer: Vec<Vertex>,
+    text_buffer: Vec<Vertex>,
     overlay: &'a Overlay,
 }
 

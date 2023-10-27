@@ -80,14 +80,14 @@ pub fn calc_text_size(text: impl Into<String>, font: &Font, text_size: f32) -> [
     for c in text.into().chars() {
         let glyph = atlas.get_glyph(c).unwrap();
 
-        let ratio = text_size / glyph.bitmap_height;
-        let x2 = x + glyph.bitmap_left * ratio;
-        let y2 = -y + glyph.bitmap_top * ratio;
-        let w = glyph.bitmap_width * ratio;
-        let h = glyph.bitmap_height * ratio;
+        let scale = atlas.font_size / text_size;
+        let x2 = x + glyph.bitmap_left * scale;
+        let y2 = -y + glyph.bitmap_top * scale;
+        let w = glyph.bitmap_width * scale;
+        let h = glyph.bitmap_height * scale;
 
-        x += glyph.advance_x * ratio;
-        y += glyph.advance_y * ratio;
+        x += glyph.advance_x * scale;
+        y += glyph.advance_y * scale;
 
         if w == 0.0 || h == 0.0 {
             continue;
@@ -123,34 +123,29 @@ impl<'a> Primitive for Text<'a> {
         for c in text.chars() {
             let glyph = atlas.get_glyph(c).unwrap();
 
-            let ratio = 0.69; //self.text_size / glyph.bitmap_height;
-            //println!("ratio: {}", ratio);
-            let x2 = x + glyph.bitmap_left * ratio;
-            let y2 = -y + glyph.bitmap_top * ratio;
-            let w = glyph.bitmap_width * ratio;
-            let h = glyph.bitmap_height * ratio;
+            let scale = self.text_size / atlas.font_size;
+            let x2 = x + glyph.bitmap_left * scale;
+            let y2 = -y + glyph.bitmap_top * scale;
+            let w = glyph.bitmap_width * scale;
+            let h = glyph.bitmap_height * scale;
 
-            // Advance the cursor to the start of the next character
-            x += glyph.advance_x * ratio;
-            y += glyph.advance_y * ratio;
+            x += glyph.advance_x * scale;
+            y += glyph.advance_y * scale;
 
-            // Skip glyphs that have no pixels
             if w == 0.0 || h == 0.0 {
                 continue;
             }
 
-            let off = 0.0000;
-
             buffer.push(Vertex {
                 position: [x2, -y2],
                 color,
-                tex_coords: [glyph.texture_x + off, 0.0],
+                tex_coords: [glyph.texture_x, 0.0],
             });
             buffer.push(Vertex {
                 position: [x2 + w, -y2],
                 color,
                 tex_coords: [
-                    glyph.texture_x + off + glyph.bitmap_width / atlas.texture_dimensions.0 as f32,
+                    glyph.texture_x + glyph.bitmap_width / atlas.texture_dimensions.0 as f32,
                     0.0,
                 ],
             });
@@ -158,7 +153,7 @@ impl<'a> Primitive for Text<'a> {
                 position: [x2, -y2 + h],
                 color,
                 tex_coords: [
-                    glyph.texture_x + off,
+                    glyph.texture_x,
                     glyph.bitmap_height / atlas.texture_dimensions.1 as f32,
                 ],
             });
@@ -167,7 +162,7 @@ impl<'a> Primitive for Text<'a> {
                 position: [x2 + w, -y2],
                 color,
                 tex_coords: [
-                    glyph.texture_x + off + glyph.bitmap_width / atlas.texture_dimensions.0 as f32,
+                    glyph.texture_x + glyph.bitmap_width / atlas.texture_dimensions.0 as f32,
                     0.0,
                 ],
             });
@@ -175,7 +170,7 @@ impl<'a> Primitive for Text<'a> {
                 position: [x2, -y2 + h],
                 color,
                 tex_coords: [
-                    glyph.texture_x + off,
+                    glyph.texture_x,
                     glyph.bitmap_height / atlas.texture_dimensions.1 as f32,
                 ],
             });
@@ -183,7 +178,7 @@ impl<'a> Primitive for Text<'a> {
                 position: [x2 + w, -y2 + h],
                 color,
                 tex_coords: [
-                    glyph.texture_x + off + glyph.bitmap_width / atlas.texture_dimensions.0 as f32,
+                    glyph.texture_x + glyph.bitmap_width / atlas.texture_dimensions.0 as f32,
                     glyph.bitmap_height / atlas.texture_dimensions.1 as f32,
                 ],
             });

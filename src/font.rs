@@ -20,7 +20,7 @@ pub struct Font {
 }
 
 impl Font {
-    pub fn new<F>(facade: &F, font_data: &[u8], font_size: u32) -> Self
+    pub fn new<F>(facade: &F, font_data: &[u8], font_size: f32) -> Self
     where
         F: ?Sized + Facade,
     {
@@ -48,7 +48,6 @@ impl Font {
 pub struct FontAtlas {
     pub texture: glium::texture::Texture2d,
     pub texture_dimensions: (u32, u32),
-    pub glyph_height: f32,
     pub font_size: f32,
     pub glyphs: Vec<Glyph>,
 }
@@ -56,7 +55,7 @@ pub struct FontAtlas {
 static mut LIBRARY: Option<FT_Library> = None;
 
 impl FontAtlas {
-    pub fn new<F>(facade: &F, font_data: &[u8], font_size: u32) -> Self
+    pub fn new<F>(facade: &F, font_data: &[u8], font_size: f32) -> Self
     where
         F: ?Sized + Facade,
     {
@@ -81,9 +80,8 @@ impl FontAtlas {
             );
             face
         };
-        let char_height = 64.0;
         unsafe {
-            FT_Set_Char_Size(face, 0, 16 * char_height as i64, font_size, font_size);
+            FT_Set_Char_Size(face, 0, (font_size * 64.0) as i64, 0, 0);
         }
 
         let glyph: FT_GlyphSlot = unsafe { (*face).glyph };
@@ -130,6 +128,8 @@ impl FontAtlas {
                     texture_x: x as f32 / w as f32,
                 });
 
+                println!("bitmap_height: {}", bitmap.rows);
+
                 x += bitmap.width + 1;
             }
         }
@@ -140,9 +140,9 @@ impl FontAtlas {
             .chunks_exact(1)
             .map(|chunk| {
                 [
-                    *chunk.first().unwrap(),
-                    *chunk.first().unwrap(),
-                    *chunk.first().unwrap(),
+                    !0,
+                    !0,
+                    !0,
                     *chunk.first().unwrap(),
                 ]
             })
@@ -158,7 +158,6 @@ impl FontAtlas {
         Self {
             texture,
             texture_dimensions: (w as u32, h as u32),
-            glyph_height: char_height,
             font_size: font_size as f32,
             glyphs,
         }
