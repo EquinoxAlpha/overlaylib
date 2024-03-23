@@ -11,6 +11,7 @@ pub struct Text<'a> {
     pub color: [f32; 4],
     pub shadow: Option<Outline>,
     pub offset: [f32; 2],
+    pub line_height: f32,
 }
 
 impl<'a> Default for Text<'a> {
@@ -23,6 +24,7 @@ impl<'a> Default for Text<'a> {
             color: DEFAULT_COLOR,
             shadow: Default::default(),
             offset: Default::default(),
+            line_height: 2.0,
         }
     }
 }
@@ -41,6 +43,13 @@ impl<'a> Text<'a> {
 
     pub fn size(self, text_size: f32) -> Self {
         Self { text_size, ..self }
+    }
+
+    pub fn line_height(self, line_height: f32) -> Self {
+        Self {
+            line_height,
+            ..self
+        }
     }
 
     pub fn position(self, position: [f32; 2]) -> Self {
@@ -80,7 +89,14 @@ pub fn calc_text_size(text: impl Into<String>, font: &Font, text_size: f32) -> [
     for c in text.into().chars() {
         let glyph = atlas.get_glyph(c).unwrap();
 
-        let scale = atlas.font_size / text_size;
+        let scale = text_size / atlas.font_size;
+
+        if c == '\n' {
+            x = 0.0;
+            y += 2.0 + text_size;
+            continue;
+        }
+
         let x2 = x + glyph.bitmap_left * scale;
         let y2 = -y + glyph.bitmap_top * scale;
         let w = glyph.bitmap_width * scale;
@@ -121,9 +137,16 @@ impl<'a> Primitive for Text<'a> {
         let color = self.color;
 
         for c in text.chars() {
+            let scale = self.text_size / atlas.font_size;
+
+            if c == '\n' {
+                x = position[0];
+                y += self.line_height + self.text_size;
+                continue;
+            }
+
             let glyph = atlas.get_glyph(c).unwrap();
 
-            let scale = self.text_size / atlas.font_size;
             let x2 = x + glyph.bitmap_left * scale;
             let y2 = -y + glyph.bitmap_top * scale;
             let w = glyph.bitmap_width * scale;
@@ -200,7 +223,6 @@ impl<'a> Primitive for Text<'a> {
         let height = max_y - min_y;
 
         for vertex in &mut buffer {
-            //println!("vp0: {:.1?}, vp1: {:.1?}", vertex.position[0], vertex.position[1]);
             vertex.position[0] -= width * self.offset[0];
             vertex.position[1] -= height * (self.offset[1] - 1.0);
         }

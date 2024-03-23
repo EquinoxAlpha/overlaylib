@@ -33,3 +33,26 @@ pub struct Outline {
     pub thickness: f32,
     pub color: [f32; 4],
 }
+
+impl Outline {
+    pub fn new() -> Self {
+        Self {
+            thickness: 1.0,
+            color: [0.0, 0.0, 0.0, 1.0]
+        }
+    }
+
+    pub fn thickness(self, thickness: f32) -> Self {
+        Self {
+            thickness,
+            ..self
+        }
+    }
+
+    pub fn color(self, color: [f32; 4]) -> Self {
+        Self {
+            color,
+            ..self
+        }
+    }
+}

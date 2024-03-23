@@ -16,7 +16,6 @@ pub struct Glyph {
 
 pub struct Font {
     pub atlas: FontAtlas,
-    pub name: String,
 }
 
 impl Font {
@@ -24,20 +23,13 @@ impl Font {
     where
         F: ?Sized + Facade,
     {
-        let name = "memory".to_string();
-
         Self {
             atlas: FontAtlas::new(facade, font_data, font_size),
-            name,
         }
     }
 
     pub fn get_glyph(&self, c: char) -> Option<&Glyph> {
         self.atlas.get_glyph(c)
-    }
-
-    pub fn get_name(&self) -> &str {
-        &self.name
     }
 
     pub fn get_texture(&self) -> &glium::texture::Texture2d {
@@ -127,8 +119,6 @@ impl FontAtlas {
                     bitmap_top: (*glyph).bitmap_top as f32,
                     texture_x: x as f32 / w as f32,
                 });
-
-                println!("bitmap_height: {}", bitmap.rows);
 
                 x += bitmap.width + 1;
             }

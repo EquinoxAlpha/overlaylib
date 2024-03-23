@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 freetype-sys = "0.18.0"
 glium = "*"
+gl = "*"
