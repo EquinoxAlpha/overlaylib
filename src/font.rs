@@ -1,8 +1,9 @@
 use freetype_sys::{
-    FT_Done_Face, FT_GlyphSlot, FT_Init_FreeType, FT_Library, FT_Load_Char, FT_New_Memory_Face,
-    FT_Set_Char_Size, FT_LOAD_RENDER,
+    FT_Done_Face, FT_Done_Library, FT_GlyphSlot, FT_Init_FreeType, FT_Load_Char, FT_New_Memory_Face, FT_Set_Char_Size, FT_LOAD_RENDER
 };
 use glium::{backend::Facade, texture::RawImage2d};
+
+use crate::texture::Texture2D;
 
 pub struct Glyph {
     pub advance_x: f32,
@@ -32,35 +33,29 @@ impl Font {
         self.atlas.get_glyph(c)
     }
 
-    pub fn get_texture(&self) -> &glium::texture::Texture2d {
+    pub fn get_texture(&self) -> &Texture2D {
         &self.atlas.texture
     }
 }
 
 pub struct FontAtlas {
-    pub texture: glium::texture::Texture2d,
+    pub texture: Texture2D,
     pub texture_dimensions: (u32, u32),
     pub font_size: f32,
     pub glyphs: Vec<Glyph>,
 }
-
-static mut LIBRARY: Option<FT_Library> = None;
 
 impl FontAtlas {
     pub fn new<F>(facade: &F, font_data: &[u8], font_size: f32) -> Self
     where
         F: ?Sized + Facade,
     {
-        unsafe {
-            if LIBRARY.is_none() {
-                let mut library = std::ptr::null_mut();
-                FT_Init_FreeType(&mut library);
-                LIBRARY = Some(library);
-            }
-        }
-
-        let library = unsafe { LIBRARY.unwrap() };
-
+        let library = unsafe {
+            let mut library = std::ptr::null_mut();
+            FT_Init_FreeType(&mut library);
+            library
+        };
+        
         let face = unsafe {
             let mut face = std::ptr::null_mut();
             FT_New_Memory_Face(
@@ -124,15 +119,13 @@ impl FontAtlas {
             }
         }
 
-        // translate image to rgba (u8, u8, u8, u8)
-
         let image = image
             .chunks_exact(1)
             .map(|chunk| {
                 [
-                    !0,
-                    !0,
-                    !0,
+                    *chunk.first().unwrap(),
+                    *chunk.first().unwrap(),
+                    *chunk.first().unwrap(),
                     *chunk.first().unwrap(),
                 ]
             })
@@ -141,15 +134,16 @@ impl FontAtlas {
 
         let image = RawImage2d::from_raw_rgba(image, (w as u32, h as u32));
 
-        let texture = glium::texture::Texture2d::new(facade, image).unwrap();
+        let texture = Texture2D::new(glium::texture::Texture2d::new(facade, image).unwrap(), (w as u32, h as u32));
 
         unsafe { FT_Done_Face(face) };
+        unsafe { FT_Done_Library(library) };
 
         Self {
             texture,
             texture_dimensions: (w as u32, h as u32),
             font_size: font_size as f32,
-            glyphs,
+            glyphs
         }
     }
 
@@ -160,6 +154,6 @@ impl FontAtlas {
             return None;
         }
 
-        Some(&self.glyphs[index])
+        self.glyphs.get(index)
     }
 }

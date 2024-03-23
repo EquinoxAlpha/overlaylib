@@ -1,27 +1,29 @@
-use crate::Vertex;
+use crate::{texture::Texture2D, Vertex};
 
 use super::{Outline, Primitive, PrimitiveType, DEFAULT_COLOR};
 
 #[allow(unused)]
-pub struct Rectangle {
+pub struct Rectangle<'a> {
     color: [f32; 4],
     dimensions: [f32; 2],
     position: [f32; 2],
     border: Option<Outline>,
+    pub texture: Option<&'a Texture2D>
 }
 
-impl Default for Rectangle {
+impl Default for Rectangle<'_> {
     fn default() -> Self {
         Self {
             color: DEFAULT_COLOR,
             dimensions: [0.0, 0.0],
             position: [0.0, 0.0],
             border: None,
+            texture: None
         }
     }
 }
 
-impl Rectangle {
+impl<'a> Rectangle<'a> {
     pub fn new() -> Self {
         Default::default()
     }
@@ -53,11 +55,17 @@ impl Rectangle {
             ..self
         }
     }
+
+    pub fn texture(self, texture: &'a Texture2D) -> Self {
+        Self {
+            texture: Some(texture),
+            ..self
+        }
+    }
 }
 
-impl Primitive for Rectangle {
+impl <'a>Primitive for Rectangle<'a> {
     fn get_vertices(&self) -> Vec<Vertex> {
-        // todo: add border
         vec![
             Vertex {
                 position: [self.position[0], self.position[1]],

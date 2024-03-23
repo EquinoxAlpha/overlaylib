@@ -1,23 +1,33 @@
-use std::collections::HashMap;
-
-use gl::types::GLuint;
-use glium::{GlObject, Texture2d};
-
 use crate::{
-    primitives::{text::Text, Primitive, PrimitiveType},
+    primitives::{text::Text, Primitive, PrimitiveType, Rectangle},
+    texture::Texture2D,
     Overlay, Vertex,
 };
 
 pub struct TexturedBuffer<'a> {
-    pub texture: Option<&'a Texture2d>,
+    pub texture: Option<&'a Texture2D>,
     pub vertices: Vec<Vertex>,
 }
 
 impl<'a> TexturedBuffer<'a> {
-    pub fn with_texture(texture: &'a Texture2d) -> Self {
+    pub fn with_texture(texture: &'a Texture2D) -> Self {
         Self {
             texture: Some(texture),
             vertices: Vec::new(),
+        }
+    }
+
+    pub fn with_texture_and_buffer(texture: &'a Texture2D, vertices: Vec<Vertex>) -> Self {
+        Self {
+            texture: Some(texture),
+            vertices,
+        }
+    }
+
+    pub fn with_buffer(vertices: Vec<Vertex>) -> Self {
+        Self {
+            texture: None,
+            vertices,
         }
     }
 
@@ -29,52 +39,70 @@ impl<'a> TexturedBuffer<'a> {
     }
 }
 
-pub const UNTEXTURED_BUFFER_ID: GLuint = 0;
-
 pub struct Frame<'a> {
-    // shape_buffer: Vec<Vertex>,
-    // text_buffer: Vec<Vertex>,
-    pub buffers: HashMap<GLuint, TexturedBuffer<'a>>,
+    pub buffers: Vec<TexturedBuffer<'a>>,
     pub overlay: &'a Overlay,
 }
 
 impl<'a> Frame<'a> {
     pub fn new(overlay: &'a Overlay) -> Self {
         Self {
-            buffers: HashMap::new(),
+            buffers: vec![],
             overlay,
         }
     }
 
     pub fn clear(&mut self) {
-        for buffer in self.buffers.values_mut() {
-            buffer.vertices.clear();
-        }
         self.buffers.clear();
+    }
+
+    fn add_buffer(&mut self, buffer: TexturedBuffer<'a>) {
+        if self.buffers.len() == 0 {
+            self.buffers.push(buffer);
+            return;
+        }
+        let len = self.buffers.len();
+        if self.buffers[len - 1].texture == buffer.texture {
+            self.buffers[len - 1].vertices.extend_from_slice(&buffer.vertices);
+        } else {
+            self.buffers.push(buffer);
+        }
     }
 
     pub fn add(&mut self, shape: impl Primitive) {
         let shape = Box::new(shape);
         match shape.get_type() {
             PrimitiveType::Text => {
-                let mut text: Box<Text> = unsafe { std::mem::transmute(shape) };
+                let mut text: Box<Text> = unsafe { std::mem::transmute(shape) }; // a necessary evil, PRs welcome
                 if text.font.is_none() {
-                    text.font = Some(self.overlay.current_font().expect("No font on the stack"));
+                    text.font = Some(
+                        self.overlay
+                            .current_font()
+                            .expect("No font on the stack"),
+                    );
                 }
-                self.buffers
-                    .entry(text.font.unwrap().get_texture().get_id())
-                    .or_insert_with(|| {
-                        TexturedBuffer::with_texture(text.font.unwrap().get_texture())
-                    })
-                    .vertices
-                    .extend(text.get_vertices());
+                let Some(font) = text.font else {return;};
+                let buffer = TexturedBuffer::with_texture_and_buffer(
+                    font.get_texture(),
+                    text.get_vertices(),
+                );
+                self.add_buffer(buffer);
+            }
+            PrimitiveType::Rectangle => {
+                let rect: Box<Rectangle> = unsafe { std::mem::transmute(shape) }; // a necessary evil, PRs welcome
+                let buffer = match rect.texture {
+                    Some(texture) => {
+                        TexturedBuffer::with_texture_and_buffer(texture, rect.get_vertices())
+                    },
+                    None => {
+                        TexturedBuffer::with_buffer(rect.get_vertices())
+                    }
+                };
+                self.add_buffer(buffer);
             }
             _ => {
-                self.buffers
-                    .entry(UNTEXTURED_BUFFER_ID)
-                    .or_insert_with(|| TexturedBuffer::new())
-                    .vertices
-                    .extend(shape.get_vertices());
+                let buffer = TexturedBuffer::with_buffer(shape.get_vertices());
+                self.add_buffer(buffer);
             }
         }
     }
