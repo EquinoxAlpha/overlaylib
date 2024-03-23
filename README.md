@@ -3,7 +3,7 @@
 A Rust crate for drawing immediate-mode overlays. Supports basic shapes (rectangles, triangles, lines, cirles), text, and textures.
 The overlay doesn't register clicks, allowing applications below it to still be interacted with. Rendering over fullscreen apps is not supported (PRs/suggestions welcome). This library does not include any way to provide input or otherwise interact with the UI, that is not its intended use case, if you need input, then use egui (Rust native) or the Rust ImGui bindings.
 
-Tested on KDE Plasma 5 and GNOME Desktop.
+Tested on KDE Plasma 5 and GNOME Desktop, both X11. It *may* work on Wayland at it even *might* work on Windows, but those weren't tested as I use X11 and don't use Windows. Let me know if they work for you or if you needed to change something.
 
 An example of how to use it can be found at https://github.com/EquinoxAlpha/overlaylib-example.
 
